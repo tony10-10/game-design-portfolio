@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>卡牌构筑与Roguelike成长系统横向研究</title>
+<style>
+@page {
+    size: A4;
+    margin: 22mm 20mm 20mm 20mm;
+}
+* { box-sizing: border-box; }
+body {
+    font-family: "Noto Serif CJK SC", "Source Han Serif SC", serif;
+    font-size: 10.5pt;
+    line-height: 1.85;
+    color: #1a1a1a;
+    text-align: justify;
+}
+h1 {
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 19pt;
+    font-weight: 900;
+    line-height: 1.35;
+    color: #0a0a0a;
+    margin: 0 0 6pt 0;
+    text-align: left;
+    letter-spacing: 0.3px;
+}
+h1 + h1 {
+    font-size: 16pt;
+    color: #2b2b2b;
+    margin-top: 2pt;
+    margin-bottom: 14pt;
+    padding-bottom: 14pt;
+    border-bottom: 2.5px solid #1a1a1a;
+}
+h2 {
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 14.5pt;
+    font-weight: 700;
+    color: #111;
+    margin: 26pt 0 12pt 0;
+    padding: 7pt 0 7pt 12pt;
+    border-left: 5px solid #c8102e;
+    background: #f7f7f7;
+    page-break-after: avoid;
+    page-break-before: auto;
+}
+h3 {
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    color: #c8102e;
+    margin: 20pt 0 8pt 0;
+    page-break-after: avoid;
+}
+h4 {
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 10.8pt;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 14pt 0 6pt 0;
+    padding-left: 10pt;
+    border-left: 3px solid #888;
+    page-break-after: avoid;
+}
+p { margin: 0 0 9pt 0; }
+strong {
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-weight: 700;
+    color: #000;
+}
+em { color: #555; font-style: normal; }
+h1 + p em, body > p:nth-of-type(1) em { font-style: normal; }
+ul, ol { margin: 4pt 0 10pt 0; padding-left: 22pt; }
+li { margin-bottom: 5pt; line-height: 1.75; }
+hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 18pt 0;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12pt 0;
+    font-size: 9.5pt;
+    line-height: 1.6;
+    page-break-inside: avoid;
+}
+th {
+    background: #1a1a1a;
+    color: #fff;
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-weight: 700;
+    padding: 7pt 9pt;
+    text-align: left;
+    border: 1px solid #1a1a1a;
+}
+td {
+    padding: 6pt 9pt;
+    border: 1px solid #ccc;
+    vertical-align: top;
+}
+tr:nth-child(even) td { background: #f5f5f5; }
+/* Inline code */
+code {
+    font-family: "Noto Sans Mono CJK SC", "DejaVu Sans Mono", monospace;
+    background: #f0f0f0;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 9pt;
+}
+/* Code blocks - the math/model boxes */
+pre {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-left: 4px solid #555;
+    border-radius: 4px;
+    padding: 10pt 14pt;
+    margin: 12pt 0;
+    overflow-x: auto;
+    page-break-inside: avoid;
+    line-height: 1.6;
+}
+pre code {
+    font-family: "Noto Sans Mono CJK SC", "DejaVu Sans Mono", monospace;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    font-size: 9pt;
+    color: #1a1a1a;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+blockquote {
+    margin: 10pt 0;
+    padding: 8pt 14pt;
+    border-left: 4px solid #c8102e;
+    background: #fafafa;
+    color: #2b2b2b;
+}
+blockquote p { margin: 0 0 6pt 0; }
+blockquote p:last-child { margin-bottom: 0; }
+blockquote strong { color: #000; }
+h2:first-of-type { page-break-before: avoid; }
+</style>
+</head>
+<body>
+<h1>卡牌构筑与 Roguelike 成长系统设计横向研究</h1>
+<p><strong>游戏策划・独立研究项目・2025</strong></p>
+<p><strong>作者：王一霖</strong></p>
+<hr />
+<h2>研究概述</h2>
+<p>以《炉石传说：酒馆战棋》《The Bazaar》《金铲铲之战》三款游戏为样本，从系统策划视角横向拆解其核心成长机制、资源运营逻辑与随机性设计哲学，提炼卡牌构筑类 Roguelike 游戏的底层设计张力。</p>
+<table>
+<thead>
+<tr>
+<th>研究背景</th>
+<th>核心能力</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统策划视角</td>
+<td>酒馆战棋 1000h+ 深度游玩</td>
+</tr>
+<tr>
+<td>横向深度研究</td>
+<td>The Bazaar 200h+ 持续体验</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>核心命题：掌控感与随机性的设计张力</h2>
+<p>卡牌构筑类 Roguelike 游戏面临一个无法回避的根本性设计矛盾：</p>
+<blockquote>
+<p><strong>随机性是这类游戏重复可玩性的生命线，但过高的随机影响因子会稀释玩家的掌控感，使策略决策失去意义。</strong></p>
+</blockquote>
+<p>这不是有标准答案的问题，而是需要根据目标受众和产品定位做出取舍的设计选择。</p>
+<h3>三款游戏的设计坐标系</h3>
+<p>《酒馆战棋》《大巴扎》《金铲铲》三款游戏，恰好代表了这个张力谱系上三个截然不同的解法。</p>
+<p><strong>横轴</strong>：随机性影响因子（牌面质量对最终结果的决定程度）
+<strong>纵轴</strong>：运营决策权重（玩家在相同牌面下通过决策改变结果的空间）</p>
+<table>
+<thead>
+<tr>
+<th>游戏</th>
+<th>随机影响因子</th>
+<th>运营决策权重</th>
+<th>设计定位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>酒馆战棋</td>
+<td>低</td>
+<td>高</td>
+<td>技术驱动型策略</td>
+</tr>
+<tr>
+<td>大巴扎</td>
+<td>高</td>
+<td>高</td>
+<td>探索驱动型组合</td>
+</tr>
+<tr>
+<td>金铲铲</td>
+<td>中</td>
+<td>低</td>
+<td>执行驱动型目标</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>深度拆解・一：炉石传说・酒馆战棋</h2>
+<p><em>Hearthstone Battlegrounds・1000h+ 深度游玩</em></p>
+<h3>核心命题：为什么运气游戏里存在稳定的强者</h3>
+<p>酒馆战棋表面上是随机性极高的游戏，但高段位玩家能做到十连、二十连吃鸡，根本原因不是"运气更好"，而是在相同随机条件下，对两种核心资源做出了更高期望值的决策。</p>
+<p><strong>胜率稳定性的数学本质：</strong></p>
+<pre><code>最终名次期望 = f(资源决策质量) + ε(随机噪声)
+
+局数越多 → 随机噪声被均摊 → 决策质量权重越显著
+→ 高手长期胜率收敛于技术水平，而非运气水平
+</code></pre>
+<h3>二元资源系统与决策密度</h3>
+<p>酒馆战棋的资源系统只有两个维度：<strong>经济资源（铸币）与血量资源（生命值）</strong>。两者通过回合时间轴深度耦合，共同决定每一回合的决策密度——玩家面临的有效选择数量与选择后果的分叉程度。</p>
+<h3>铸币的时间价值：非线性回合杠杆</h3>
+<p><strong>铸币时间价值模型：</strong></p>
+<pre><code>铸币战力转化价值 = 基础购买力 × 回合杠杆系数
+回合杠杆系数 ∝ 本数 × 牌池深度 × 场面复杂度（非线性递增）
+
+→ 提前消耗铸币的机会成本持续升高
+→ 典型低水平失误：每回合局部最优贪心决策
+</code></pre>
+<h3>高本是核心逻辑：收益的指数级跃迁</h3>
+<p>在没有特殊饰品和畸变机制干预的情况下，抢占高本是酒馆战棋最核心的运营逻辑，有三条结构性原因支撑：</p>
+<ul>
+<li><strong>可选资源空间指数扩张</strong>：高本可选集合是低本的超集，每次刷新的期望牌值显著更高</li>
+<li><strong>战力体系完整性跃迁</strong>：多数强力羁绊依赖高费随从，高本使战力从"堆砌"变成"完整"，产生俗称"电表倒转"的不连续跃升</li>
+<li><strong>卡池竞争的零和博弈</strong>：随从牌池全局共享且数量有限，先升高本者优先抢占核心随从，同时压缩对手获取同类随从的概率</li>
+</ul>
+<h3>血量资源：15 血斩杀线与跨资源套利</h3>
+<blockquote>
+<p>在保持 15 血以上的前提下，前期的血量损失可以被视为"无成本的经济换取空间"。</p>
+</blockquote>
+<p>绝大多数英雄的战力爆发集中在高本解锁之后，前期主动放血换取经济加速，是一种跨资源套利行为——当牺牲的血量价值（前期低）小于换取的升本加速价值（后期高），放血换节奏即为正期望决策。</p>
+<p><strong>被动低本时的应急策略：</strong></p>
+<ul>
+<li><strong>策略 A</strong>：低本补战力苟活 → 以长期期望换短期生存概率</li>
+<li><strong>策略 B</strong>：以小博大（下毒）→ 最小成本赌取一场胜利，争取升本窗口</li>
+</ul>
+<blockquote>
+<p>两种策略的本质：当期望值为负时，主动提高结果方差 → 数学上唯一合理的反败为胜路径</p>
+</blockquote>
+<h3>英雄差异：发力节点决定资源策略树</h3>
+<table>
+<thead>
+<tr>
+<th>英雄类型</th>
+<th>发力节点</th>
+<th>前期血线容错</th>
+<th>核心运营逻辑</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>前期强势型</td>
+<td>早（低本成型）</td>
+<td>小，需稳定投入</td>
+<td>建立早期优势，滚雪球</td>
+</tr>
+<tr>
+<td>后期爆发型</td>
+<td>晚（高本依赖）</td>
+<td>大，可主动放血</td>
+<td>经济加速，压缩升本时间</td>
+</tr>
+<tr>
+<td>中期过渡型</td>
+<td>中</td>
+<td>中等</td>
+<td>动态判断，灵活切换节奏</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>值得关注的是，顶端酒馆竞技选手甚至会将每张牌每回合的战力影响因子背诵下来——将随机性从"不确定性"转化为"已知概率分布"。这是概率策略游戏的必然归宿：随机性对普通玩家是噪声，对顶端选手是可计算的期望空间。</p>
+</blockquote>
+<hr />
+<h2>深度拆解・二：The Bazaar / 大巴扎</h2>
+<p><em>The Bazaar・200h+ 深度游玩・持续入坑中</em></p>
+<h3>经济系统：连续复利 VS 离散跃迁</h3>
+<p><strong>两种经济爆发模式的本质差异：</strong></p>
+<pre><code>酒馆战棋：电表倒转 ≈ 升本节点触发（离散跃迁·有统一时间锚）
+大巴扎：  电表倒转 ≈ 组合成型后的复利滚动（连续增长·无统一时间锚）
+
+→ 大巴扎玩家需自行判断&quot;我的组合什么时候成型&quot;
+→ 这本身即是一项高难度的局面感知能力
+</code></pre>
+<h3>胜负机制：攻守双轴的复合压力</h3>
+<p>大巴扎引入了整数胜场计数与血量的双轨制：</p>
+<ul>
+<li>胜利积累胜场数达到目标获胜</li>
+<li>落败扣除血量归零出局</li>
+</ul>
+<p>两个目标时常产生张力——为积攒胜场需要挑战更强野怪，挑战失败又加速血量消耗。这种攻守两轴的压力使决策复杂度显著高于酒馆。</p>
+<h3>等级系统：乘数型资源与最核心的增量设计</h3>
+<p>这是大巴扎与酒馆、金铲铲最显著的系统差异。等级的影响是全方面的乘数（非线性放大函数，而非加法系数）：</p>
+<ul>
+<li>数值成长</li>
+<li>地毯面积扩张（可上场卡牌数量）</li>
+<li>可挑战野怪强度与事件稀有度</li>
+<li>职业发牌池的解锁深度</li>
+</ul>
+<p><strong>与酒馆升本的关键差异：</strong></p>
+<pre><code>酒馆升本 = 玩家主动花钱触发（直接控制）
+大巴扎等级 = 由事件稀有度/野怪强度决定（间接控制）
+
+→ 玩家对等级提升的掌控权更加间接
+→ 战力上限 = 卡牌组合强度 × f(等级)，f 为非线性放大函数
+</code></pre>
+<h3>最关键的设计张力：掌控感的稀释</h3>
+<blockquote>
+<p>大巴扎的战力提升几乎只来自牌面本身，而酒馆战棋在烂牌条件下仍然可以靠运营吃鸡。拿到什么牌基本决定了这把的上限，玩家的运营能压缩差距，但几乎无法逆转牌面质量的根本性劣势——抽到好牌的影响因子在大巴扎中远大于酒馆。</p>
+</blockquote>
+<p><strong>两款游戏影响因子的结构差异：</strong></p>
+<pre><code>酒馆战棋胜率 = α · 牌面质量 + β · 资源决策质量    （β 显著）
+大巴扎胜率   = α' · 牌面质量 + β' · 资源决策质量   （α' &gt;&gt; β'）
+</code></pre>
+<p><strong>连锁效应：</strong></p>
+<ul>
+<li><strong>A</strong>：Meta 趋同压力加剧（理性玩家向已知最强组合收敛）</li>
+<li><strong>B</strong>：自审战力决策负担加重（战力感知能力培养周期极长）</li>
+</ul>
+<h3>连败补偿：最激进的安全网设计</h3>
+<p>大巴扎的连败补偿机制在三款游戏里独一无二：触发一次免死锁血，同时获得强化加成。这个机制的存在本身，反向印证了"掌控感稀释"的判断——正因为系统承认了随机性对玩家的冲击，才需要这样一个强力补偿兜底。</p>
+<table>
+<thead>
+<tr>
+<th>游戏</th>
+<th>连败补偿机制</th>
+<th>设计哲学</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>酒馆战棋</td>
+<td>掉车尾巴打尸体（对局保护）</td>
+<td>温和：降低出局速度</td>
+</tr>
+<tr>
+<td>金铲铲</td>
+<td>连败奖励金币 / 强化符文</td>
+<td>经济补偿：缩小实力差距</td>
+</tr>
+<tr>
+<td>大巴扎</td>
+<td>免死锁血 + 强化加成</td>
+<td>激进：暂停失败并给予反击资本</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>深度拆解・三：金铲铲之战</h2>
+<p><em>Teamfight Tactics・有限局数游玩 + 资料研究</em></p>
+<h3>D 牌决策：极简化的策略内核</h3>
+<p>金铲铲将策略复杂度有意压缩到一个核心行为：<strong>d 牌</strong>。其最优决策逻辑高度线性——识别 Meta 阵容、定向 d 牌凑齐、合成三星、重复执行。决策树分叉数量远少于酒馆和大巴扎，接近有限状态机，也因此是三款游戏里 AI 代打实现难度最低的。</p>
+<p><strong>决策复杂度的集合关系：</strong></p>
+<pre><code>金铲铲决策空间 ⊂ (酒馆决策空间 ∪ 大巴扎决策空间)
+
+→ 金铲铲可理解为两款游戏各取了一个&quot;d牌决策&quot;的子集
+→ 这是清醒的产品定位选择，不是设计缺陷
+</code></pre>
+<h3>Meta 趋同：结构性问题，而非平衡性问题</h3>
+<p>金铲铲的 Meta 趋同问题比大巴扎更严重，且是系统结构决定的——大巴扎的随机掉落和奇异事件会强制玩家偏离预设路线，而金铲铲的随机性来源更少，玩家在大多数局里都有足够自由度执行预设 Meta。这导致局间同质化程度最高，重复可玩性高度依赖版本更新。</p>
+<h3>金铲铲真正有价值的设计点</h3>
+<ul>
+<li><strong>中场英雄挑选</strong>：插入一个主动选择节点，维持玩家掌控感的心理锚定，即使整体路线仍高度 Meta 化</li>
+<li><strong>打野随机装备掉落</strong>：引入与 d 牌决策正交的随机轴，迫使玩家在"预期阵容"和"装备支持的阵容"之间做妥协，是游戏里少数能产生非预期决策分叉的设计</li>
+<li><strong>海克斯系统</strong>：提供局外成长进度感，缓解单局随机性挫败感——不在局内给免死，而在局外给积累感</li>
+</ul>
+<p><strong>三星合成的情绪设计模型：</strong></p>
+<pre><code>爽感强度 = 期待积累（凑牌过程）× 即时反馈（三星特效 + 战力跃升）
+
+→ 将&quot;手段&quot;（d 牌）包装成了&quot;目的&quot;本身
+→ 低复杂度决策过程产生高强度情绪回报
+→ 这是金铲铲最成功的单点设计
+</code></pre>
+<hr />
+<h2>横向对比：三款游戏的系统结构全景</h2>
+<table>
+<thead>
+<tr>
+<th>对比维度</th>
+<th>酒馆战棋</th>
+<th>大巴扎</th>
+<th>金铲铲</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>核心玩家体验</strong></td>
+<td>「我用更好的决策战胜了更好的牌」</td>
+<td>「我从随机的混沌里拼出了精妙的组合」</td>
+<td>「我知道要做什么，我只需要做到它」</td>
+</tr>
+<tr>
+<td>经济爆发形式</td>
+<td>升本节点的离散跃迁</td>
+<td>组合成型后的连续复利</td>
+<td>三星合成的阶梯爬升</td>
+</tr>
+<tr>
+<td>随机性来源层数</td>
+<td>两层（牌池 + 对手配对）</td>
+<td>多层（掉落 + 事件 + 职业牌池）</td>
+<td>较少（牌池 + 装备掉落）</td>
+</tr>
+<tr>
+<td>运营决策权重</td>
+<td>高，烂牌可运营</td>
+<td>中，受牌面质量制约</td>
+<td>低，目标路线清晰</td>
+</tr>
+<tr>
+<td>玩家掌控感</td>
+<td>强</td>
+<td>中（部分让渡于探索乐趣）</td>
+<td>中（锚定于 Meta 执行感）</td>
+</tr>
+<tr>
+<td>Meta 趋同程度</td>
+<td>低</td>
+<td>中</td>
+<td>高（结构性问题）</td>
+</tr>
+<tr>
+<td>连败补偿机制</td>
+<td>温和（对局保护）</td>
+<td>激进（免死 + 强化）</td>
+<td>经济补偿（金币 / 符文）</td>
+</tr>
+<tr>
+<td>新鲜感主要来源</td>
+<td>决策路径本身的多样性</td>
+<td>词条组合的探索空间</td>
+<td>版本更新驱动</td>
+</tr>
+<tr>
+<td>核心情绪设计</td>
+<td>运营成功的成就感</td>
+<td>组合成型的惊喜感</td>
+<td>三星合成的即时反馈</td>
+</tr>
+<tr>
+<td>上手门槛</td>
+<td>中</td>
+<td>极高</td>
+<td>低</td>
+</tr>
+<tr>
+<td>AI 代打难度</td>
+<td>中</td>
+<td>高</td>
+<td>最低（有限状态机）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>设计启示</h2>
+<h3>统一原则与三种解法各自的结构性代价</h3>
+<blockquote>
+<p>随机性本身不是问题，问题是随机性的冲击有没有被相应的玩家能动性所承接。</p>
+<ul>
+<li>当随机性高但玩家能动性也高，游戏有深度但门槛极高</li>
+<li>当随机性低但玩家能动性高，产生最大的"以弱胜强"爽感</li>
+<li>当两者都被压低，获得最广泛的受众，但以牺牲长期策略深度为代价</li>
+</ul>
+</blockquote>
+<h3>三种解法与结构性代价</h3>
+<table>
+<thead>
+<tr>
+<th>酒馆战棋的解法</th>
+<th>大巴扎的解法</th>
+<th>金铲铲的解法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>用时间轴消化随机性</strong></td>
+<td><strong>用组合深度对抗随机性</strong></td>
+<td><strong>用目标明确化绕开随机性</strong></td>
+</tr>
+<tr>
+<td>代价：顶端竞技必然向"背牌表"靠拢，策略深度反而来自记忆壁垒</td>
+<td>代价：新手入门成本极高，卡池越深 Meta 趋同越难根治</td>
+<td>代价：策略深度天花板低，重复可玩性高度依赖版本更新</td>
+</tr>
+</tbody>
+</table>
+<h3>对系统策划的核心启示</h3>
+<p>在设计卡牌构筑类游戏时，最先需要回答的问题不是"做什么机制"，而是 <strong>"目标玩家在随机性和掌控感的谱系上，愿意接受怎样的平衡"</strong>。</p>
+<p>三款游戏都以各自的方式，回答了同一个底层设计问题。理解这个张力，并在设计之初就做出清醒的取舍，是这类游戏系统设计最核心的判断力所在。</p>
+<hr />
+<p><em>卡牌构筑与 Roguelike 成长系统设计横向研究・游戏策划独立项目</em>
+<em>研究方法：深度游玩 + 系统拆解 + 横向对比</em></p>
+</body>
+</html>
